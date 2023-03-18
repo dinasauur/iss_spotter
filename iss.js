@@ -23,10 +23,10 @@ const fetchMyIP = function(callback) {
     // error can be set if invalid domain, user is offline, etc.
     if (error) return callback(error, null);
 
-    // if non-200 status, assume server error
+    // Error Handling -> if non-200 status, assume server error
     if (statusCode !== 200) {
       const msg = `Status Code ${statusCode} when fetching IP. Response: ${body}`;
-      callback(error(msg), null);
+      callback(msg, null); // Can also do callback(Error(msg), null) -> this basically prints out all the error (normal and written). What we did was basically pass the msg as the value to the error parameter in the callback function.
       return;
     }
 
@@ -37,4 +37,69 @@ const fetchMyIP = function(callback) {
   });
 };
 
-module.exports = { fetchMyIP };
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// Step 2 - API call #2 - Fetch GEO Coordinates By IP
+// Our next function, fetchCoordsByIP will be one that takes in an IP address and returns the latitude and longitude for it
+
+const fetchCoordsByIP = function(ip, callback) {
+  const url = `http://ipwho.is/${ip}`;
+  request(url, (error, response, body) => {
+    // This code checks for errors in our request callback, it's always the first set of checks before we try to parse the body.
+    if (error) {
+      callback(error, null);
+      return;
+    }
+
+    // Parse the returned body
+    const data = JSON.parse(body);
+
+    // Error Handling - Invalid IP value
+    /// check if parsed body/ data (in this case) is success or not
+    if (!data.success) {
+      const msg = `Success status was ${data.success}. Server message says: ${data.message} when fetching for IP ${data.ip}.`;
+      callback(msg, null);
+      return;
+    }
+
+    // Retrieve latitude and longitude
+    //// NEW: Deconstructuring. This is called binding... each individual property is bound to the variable data.
+    const { latitude, longitude } = data;
+
+    // Happy Path
+    callback(null, { latitude, longitude });
+  });
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Step 3 - Fetch the next ISS flyovers for our geo coordinates;
+/// Given a location on earth (lat, long, alt), this API will computer the next number of times that the ISS will be overhead
+// input: latitude/longitude pair, an altitude, and how many results to return
+// output: get the same inputs back (for checking), a time stamp when the API ran, success/failure message, list of passes (each pass has duration in second and a rise time as a unix time stamp)
+
+
+const fetchISSFlyOverTimes = function(coords, callback) {
+  const url = `https://iss-flyover.herokuapp.com/json/?lat=${coords.latitude}&lon=${coords.longitude}`;
+
+  request(url, (error, response, body) => {
+    if (error) {
+      callback(error, null);
+      return;
+    }
+    const statusCode = response.statusCode;
+    if (statusCode !== 200) {
+      const msg = `Status Code ${statusCode} when fetching IP. Response: ${body}`;
+      callback(msg, null); // Can also do callback(Error(msg), null) -> this basically prints out all the error (normal and written). What we did was basically pass the msg as the value to the error parameter in the callback function.
+      return;
+    }
+
+    // parse the returned body and access the response property
+    const data = JSON.parse(body).response;
+
+    // Happy Path
+    callback(null, data); // !!!!!!!!!! returning It worked! Returned flyover times: [object Object],[object Object],[object Object],[object Object],[object Object]
+  });
+};
+
+module.exports = { fetchMyIP, fetchCoordsByIP, fetchISSFlyOverTimes };
+
