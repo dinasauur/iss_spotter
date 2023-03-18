@@ -1,7 +1,8 @@
 // will require and run our main function
-// const { fetchMyIP, fetchCoordsByIP, fetchISSFlyOverTimes } = require('./iss');
+//const { fetchMyIP, fetchCoordsByIP, fetchISSFlyOverTimes } = require('./iss');
 
-/* STEP 1
+/*
+//STEP 1
 
 fetchMyIP((error, ip) => {
   if (error) {
@@ -10,12 +11,13 @@ fetchMyIP((error, ip) => {
   }
   console.log(`It worked! Returned IP: `, ip);
 });
-
 */
+
 
 /////////////////////////////////////////////////////////////////
 // STEP 2
 // https://ipwho.is/42 --> Incorrect URL
+
 /*
 fetchCoordsByIP('162.245.144.188', (error, ip) => {
   if (error) {
@@ -24,8 +26,8 @@ fetchCoordsByIP('162.245.144.188', (error, ip) => {
   }
   console.log(`It worked! Returned IP: `, ip);
 });
-*/
 
+*/
 
 /////////////////////////////////////////////////////////////////
 // STEP 3
@@ -36,13 +38,30 @@ fetchISSFlyOverTimes(coords, (error, passTimes) => {
     console.log(`Oops! Something went wrong: `, error);
     return;
   }
-  console.log(`It worked! Returned flyover times: ${arrayData}`);
+  console.log(`It worked! Returned flyover times: ${passTimes}`);
 });
+
 */
 
 /////////////////////////////////////////////////////////////////
 
+// Next pass at Fri Jun 01 2021 13:01:35 GMT-0700 (Pacific Daylight Time) for 465 seconds!
+
 const { nextISSTimesForMyLocation } = require('./iss');
+
+const printPassTimes = function(passTimes) {
+  for (const value of passTimes) {
+    const risetime = value.risetime;
+    const dateTime = new Date();
+    dateTime.setUTCSeconds(risetime);
+
+    const duration = value.duration;
+
+    console.log(`Next pass at ${dateTime} for ${duration} seconds!`);
+  }
+};
+
+
 
 nextISSTimesForMyLocation((error, passTimes) => {
   if (error) {
@@ -50,5 +69,5 @@ nextISSTimesForMyLocation((error, passTimes) => {
     return;
   }
 
-  console.log(`Here are the deets: ${passTimes}`);
+  printPassTimes(passTimes);
 });

@@ -17,13 +17,11 @@ const fetchMyIP = function(callback) {
   // use request to fetch IP address from JSON API
   const url = `https://api.ipify.org?format=json`;
   request(url, (error, response, body) => {
-
-    const statusCode = response.statusCode;
-
     // inside the request callback ...
     // error can be set if invalid domain, user is offline, etc.
     if (error) return callback(error, null);
 
+    const statusCode = response.statusCode;
     // Error Handling -> if non-200 status, assume server error
     if (statusCode !== 200) {
       const msg = `Status Code ${statusCode} when fetching IP. Response: ${body}`;
@@ -31,7 +29,8 @@ const fetchMyIP = function(callback) {
       return;
     }
 
-    const ip = JSON.parse(body);
+    const ip = JSON.parse(body).ip;
+
     // Happy Path
     callback(null, ip);
 
@@ -95,9 +94,8 @@ const fetchISSFlyOverTimes = function(coords, callback) {
 
     // parse the returned body and access the response property
     const data = JSON.parse(body).response;
-
     // Happy Path
-    callback(null, data); // !!!!!!!!!! returning It worked! Returned flyover times: [object Object],[object Object],[object Object],[object Object],[object Object]
+    callback(null, data); // !!!!!!!!!! returning It worked! Returned flyover times: [object Object],[object Object],[object Object],[object Object],[object Object]. By stringifying it, it returns the actual values
   });
 };
 
@@ -105,7 +103,7 @@ const fetchISSFlyOverTimes = function(coords, callback) {
 /**
  * Orchestrates multiple API requests in order to determine the next 5 upcoming ISS fly overs for the user's current location.
  * Input:
- *   - A callback with an error or results. 
+ *   - A callback with an error or results.
  * Returns (via Callback):
  *   - An error, if any (nullable)
  *   - The fly-over times as an array (null if error):
@@ -122,13 +120,12 @@ const nextISSTimesForMyLocation = function(callback) {
         return callback(error, null);
       }
 
-      fetchISSFlyOverTimes(location, (error, passTimes) => {
+      fetchISSFlyOverTimes(location, (error, nextPass) => {
         if (error) {
           return callback(error, null);
         }
-
         // Happy Path
-        callback(null, passTimes);
+        callback(null, nextPass);
       });
     });
   });
